@@ -51,12 +51,12 @@ def preprocess(text):
     # split the text into sentences
     text = split_words_between_brackets(text)
     # save the cleaned text with diacritics to a file 
-    with open('dataset/cleaned_train_data_with_diacritics.txt', 'a+',encoding='utf-8') as f:
+    with open('../dataset/cleaned_train_data_with_diacritics.txt', 'a+',encoding='utf-8') as f:
         f.write('\n'.join(text))
     # remove diacritics
     text = [remove_diactrics(sentence) for sentence in text]
     # save the cleaned text without diacritics to a file
-    with open('dataset/cleaned_train_data_without_diacritics.txt', 'a+',encoding='utf-8') as f:
+    with open('../dataset/cleaned_train_data_without_diacritics.txt', 'a+',encoding='utf-8') as f:
         f.write('\n'.join(text))
     return text
 
@@ -71,16 +71,16 @@ def tokenize(text):
         if filtered_tokens != []: filtered_sentences.append(filtered_tokens)
     return filtered_sentences
 
-sentences = []
-# read the train data and clean it and save it to the files
-with open('dataset/train.txt', 'r',encoding='utf-8') as f:
-    lines = f.readlines()
-    for line in lines:
-        sentences.extend(preprocess(line))
+# sentences = []
+# # read the train data and clean it and save it to the files
+# with open('dataset/train.txt', 'r',encoding='utf-8') as f:
+#     lines = f.readlines()
+#     for line in lines:
+#         sentences.extend(preprocess(line))
 
 
-# read the data from cleaned files
-with open('dataset/cleaned_train_data_with_diacritics.txt', 'r',encoding='utf-8') as f:
-    sentences_with_diacritics = f.readlines()
-with open('dataset/cleaned_train_data_without_diacritics.txt', 'r',encoding='utf-8') as f:
-    sentences_without_diacritics = f.readlines()
+# # read the data from cleaned files
+# with open('dataset/cleaned_train_data_with_diacritics.txt', 'r',encoding='utf-8') as f:
+#     sentences_with_diacritics = f.readlines()
+# with open('dataset/cleaned_train_data_without_diacritics.txt', 'r',encoding='utf-8') as f:
+#     sentences_without_diacritics = f.readlines()
