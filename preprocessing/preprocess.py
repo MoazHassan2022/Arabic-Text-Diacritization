@@ -45,20 +45,42 @@ def remove_diactrics(text):
     reg = r'[\u064B-\u065F\u0670\uFE70-\uFE7F]'
     return replace_pattern(text, re.compile(reg))
 
-def preprocess(text):
+def preprocess(text, data_type):
+    # data_type can be 'train', 'val', or 'test'
     # clean the text from unwanted characters
     text = clean(text)
     # split the text into sentences
     text = split_words_between_brackets(text)
+    # if no text was found, return an empty list
+    if len(text) == 0:
+        return []
     # save the cleaned text with diacritics to a file 
-    with open('../dataset/cleaned_train_data_with_diacritics.txt', 'a+',encoding='utf-8') as f:
+    with open(f'../dataset/cleaned_{data_type}_data_with_diacritics.txt', 'a+',encoding='utf-8') as f:
         f.write('\n'.join(text))
+        f.write('\n')
     # remove diacritics
     text = [remove_diactrics(sentence) for sentence in text]
     # save the cleaned text without diacritics to a file
     with open('../dataset/cleaned_train_data_without_diacritics.txt', 'a+',encoding='utf-8') as f:
         f.write('\n'.join(text))
+        f.write('\n')
     return text
+
+def preprocess_data(data_type, limit = 0):
+    # data_type can be 'train', 'val', or 'test'
+    # delete the output files if exist
+    with open(f'../dataset/cleaned_{data_type}_data_with_diacritics.txt', 'w',encoding='utf-8') as f:
+        pass
+    with open(f'../dataset/cleaned_{data_type}_data_without_diacritics.txt', 'w',encoding='utf-8') as f:
+        pass
+    sentences = []
+    # read the data and clean it and save it to the files
+    with open(f'../dataset/{data_type}.txt', 'r',encoding='utf-8') as f:
+        lines = [next(f).strip() for _ in range(limit)]
+        for line in lines:
+            sentences.extend(preprocess(line, data_type))
+        
+    return sentences
 
 def tokenize(text):
     # tokenize the text
@@ -70,17 +92,3 @@ def tokenize(text):
         filtered_tokens = [token for token in sentence if token not in stopwords.words('arabic')]
         if filtered_tokens != []: filtered_sentences.append(filtered_tokens)
     return filtered_sentences
-
-# sentences = []
-# # read the train data and clean it and save it to the files
-# with open('dataset/train.txt', 'r',encoding='utf-8') as f:
-#     lines = f.readlines()
-#     for line in lines:
-#         sentences.extend(preprocess(line))
-
-
-# # read the data from cleaned files
-# with open('dataset/cleaned_train_data_with_diacritics.txt', 'r',encoding='utf-8') as f:
-#     sentences_with_diacritics = f.readlines()
-# with open('dataset/cleaned_train_data_without_diacritics.txt', 'r',encoding='utf-8') as f:
-#     sentences_without_diacritics = f.readlines()
