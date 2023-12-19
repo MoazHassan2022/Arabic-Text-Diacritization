@@ -61,7 +61,7 @@ def preprocess(text, data_type):
     # remove diacritics
     text = [remove_diactrics(sentence) for sentence in text]
     # save the cleaned text without diacritics to a file
-    with open('../dataset/cleaned_train_data_without_diacritics.txt', 'a+',encoding='utf-8') as f:
+    with open(f'../dataset/cleaned_{data_type}_data_without_diacritics.txt', 'a+',encoding='utf-8') as f:
         f.write('\n'.join(text))
         f.write('\n')
     return text
