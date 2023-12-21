@@ -7,22 +7,24 @@ def replace_pattern(text,pattern,replace = ''):
     cleaned_text = pattern.sub(replace, text)
     return cleaned_text
 
-def clean(text):
-    # remove any brackets that have only numbers inside and remove all numbers 
-    reg = r'\(\s*(\d+)\s*\/\s*(\d+)\s*\)|\d+'
-    text = replace_pattern(text, re.compile(reg))
-    # replace all different types of brackets with a single type
-    reg_opening_brackets = r'[\[\{]'
-    reg_closing_brackets = r'[\]\}]'
-    text = replace_pattern(text, re.compile(reg_opening_brackets), '(')
-    text = replace_pattern(text, re.compile(reg_closing_brackets), ')')
-    # remove some unwanted characters
-    reg = r'[/!\-؛،؟:\.]'
-    text = replace_pattern(text, re.compile(reg))
-    # remove extra spaces
-    reg = r'\s+'
-    text = replace_pattern(text, re.compile(reg), ' ')
-    return text
+def clean(lines):
+    for i in range(len(lines)):
+        # remove any brackets that have only numbers inside and remove all numbers 
+        reg = r'\(\s*(\d+)\s*\/\s*(\d+)\s*\)|\d+'
+        lines[i] = replace_pattern(lines[i], re.compile(reg))
+        # replace all different types of brackets with a single type
+        reg_brackets = r'[\[\{\(\]\}\)]'
+        lines[i] = re.compile(reg_brackets).sub('', lines[i])
+        # remove some unwanted characters
+        reg = r'[/!\-؛،؟:\.]'
+        lines[i] = replace_pattern(lines[i], re.compile(reg))
+        # remove extra spaces
+        reg = r'\s+'
+        # remove unwanted characters
+        reg = r'[,»\–\';«\*\u200f\"`]'
+        
+        lines[i] = replace_pattern(lines[i], re.compile(reg), ' ')
+    return lines
 
 def split_words_between_brackets(text):
     # Define a regular expression pattern to match words between brackets
@@ -40,33 +42,32 @@ def split_words_between_brackets(text):
     matches_in_brackets.extend(matches_outside_brackets)
     return matches_in_brackets
 
-def remove_diactrics(text):
-    # remove diacritics
-    reg = r'[\u064B-\u065F\u0670\uFE70-\uFE7F]'
-    return replace_pattern(text, re.compile(reg))
+def remove_diactrics(lines):
+    for i in range(len(lines)):
+        # remove diacritics
+        reg = r'[\u064B-\u065F\u0670\uFE70-\uFE7F]'
+        lines[i] = replace_pattern(lines[i], re.compile(reg))
+    return lines
 
-def preprocess(text, data_type):
+def preprocess(lines, data_type):
     # data_type can be 'train', 'val', or 'test'
     # clean the text from unwanted characters
-    text = clean(text)
-    # split the text into sentences
-    text = split_words_between_brackets(text)
-    # if no text was found, return an empty list
-    if len(text) == 0:
-        return []
+    lines = clean(lines)
+    if len(lines) == 0:
+        return lines
     # save the cleaned text with diacritics to a file 
     with open(f'../dataset/cleaned_{data_type}_data_with_diacritics.txt', 'a+',encoding='utf-8') as f:
-        f.write('\n'.join(text))
+        f.write('\n'.join(lines))
         f.write('\n')
     # remove diacritics
-    text = [remove_diactrics(sentence) for sentence in text]
+    lines = remove_diactrics(lines)
     # save the cleaned text without diacritics to a file
     with open(f'../dataset/cleaned_{data_type}_data_without_diacritics.txt', 'a+',encoding='utf-8') as f:
-        f.write('\n'.join(text))
+        f.write('\n'.join(lines))
         f.write('\n')
-    return text
+    return lines
 
-def preprocess_data(data_type, limit = 0):
+def preprocess_data(data_type, limit = None):
     # data_type can be 'train', 'val', or 'test'
     # delete the output files if exist
     with open(f'../dataset/cleaned_{data_type}_data_with_diacritics.txt', 'w',encoding='utf-8') as f:
@@ -76,9 +77,12 @@ def preprocess_data(data_type, limit = 0):
     sentences = []
     # read the data and clean it and save it to the files
     with open(f'../dataset/{data_type}.txt', 'r',encoding='utf-8') as f:
-        lines = [next(f).strip() for _ in range(limit)]
-        for line in lines:
-            sentences.extend(preprocess(line, data_type))
+        lines = f.readlines()
+        lines = [line.strip() for line in lines]
+        if limit == None:
+            limit = len(lines)
+        lines = lines[:limit]
+        sentences = preprocess(lines, data_type)
         
     return sentences
 
