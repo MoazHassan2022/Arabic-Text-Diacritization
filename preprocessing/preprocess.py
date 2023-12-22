@@ -1,6 +1,4 @@
 import re
-from nltk.tokenize import TreebankWordTokenizer
-from nltk.corpus import stopwords
 
 def replace_pattern(text,pattern,replace = ''):
     # Replace diacritics from the text
@@ -20,27 +18,12 @@ def clean(lines):
         lines[i] = replace_pattern(lines[i], re.compile(reg))
         # remove extra spaces
         reg = r'\s+'
+        lines[i] = replace_pattern(lines[i], re.compile(reg), ' ')
         # remove unwanted characters
         reg = r'[,»\–\';«\*\u200f\"`]'
         
-        lines[i] = replace_pattern(lines[i], re.compile(reg), ' ')
+        lines[i] = replace_pattern(lines[i], re.compile(reg), '')
     return lines
-
-def split_words_between_brackets(text):
-    # Define a regular expression pattern to match words between brackets
-    pattern_in_brackets = re.compile(r'\((.*?)\)')
-    # Find all matches in the text
-    matches_in_brackets = pattern_in_brackets.findall(text)
-    # Join all matches into a single string to form a sentence
-    matches_in_brackets = [match.strip() for match in matches_in_brackets]
-
-    # Define a regular expression pattern to match sentences outside brackets
-    pattern_outside_brackets = re.compile(r'[^()]+(?=\()|(?<=\))[^()]+')
-    # Find all matches in the text
-    matches_outside_brackets = pattern_outside_brackets.findall(text)
-    matches_outside_brackets = [match.strip() for match in matches_outside_brackets]
-    matches_in_brackets.extend(matches_outside_brackets)
-    return matches_in_brackets
 
 def remove_diactrics(lines):
     for i in range(len(lines)):
@@ -49,50 +32,39 @@ def remove_diactrics(lines):
         lines[i] = replace_pattern(lines[i], re.compile(reg))
     return lines
 
-def preprocess(lines, data_type):
+def preprocess(lines, data_type, dataset_path = '../dataset'):
     # data_type can be 'train', 'val', or 'test'
     # clean the text from unwanted characters
     lines = clean(lines)
     if len(lines) == 0:
         return lines
     # save the cleaned text with diacritics to a file 
-    with open(f'../dataset/cleaned_{data_type}_data_with_diacritics.txt', 'a+',encoding='utf-8') as f:
+    with open(f'{dataset_path}/cleaned_{data_type}_data_with_diacritics.txt', 'a+',encoding='utf-8') as f:
         f.write('\n'.join(lines))
         f.write('\n')
     # remove diacritics
     lines = remove_diactrics(lines)
     # save the cleaned text without diacritics to a file
-    with open(f'../dataset/cleaned_{data_type}_data_without_diacritics.txt', 'a+',encoding='utf-8') as f:
+    with open(f'{dataset_path}/cleaned_{data_type}_data_without_diacritics.txt', 'a+',encoding='utf-8') as f:
         f.write('\n'.join(lines))
         f.write('\n')
     return lines
 
-def preprocess_data(data_type, limit = None):
+def preprocess_data(data_type, limit = None, dataset_path = '../dataset'):
     # data_type can be 'train', 'val', or 'test'
     # delete the output files if exist
-    with open(f'../dataset/cleaned_{data_type}_data_with_diacritics.txt', 'w',encoding='utf-8') as f:
+    with open(f'{dataset_path}/cleaned_{data_type}_data_with_diacritics.txt', 'w',encoding='utf-8') as f:
         pass
-    with open(f'../dataset/cleaned_{data_type}_data_without_diacritics.txt', 'w',encoding='utf-8') as f:
+    with open(f'{dataset_path}/cleaned_{data_type}_data_without_diacritics.txt', 'w',encoding='utf-8') as f:
         pass
     sentences = []
     # read the data and clean it and save it to the files
-    with open(f'../dataset/{data_type}.txt', 'r',encoding='utf-8') as f:
+    with open(f'{dataset_path}/{data_type}.txt', 'r',encoding='utf-8') as f:
         lines = f.readlines()
         lines = [line.strip() for line in lines]
         if limit == None:
             limit = len(lines)
         lines = lines[:limit]
-        sentences = preprocess(lines, data_type)
+        sentences = preprocess(lines, data_type, dataset_path)
         
     return sentences
-
-def tokenize(text):
-    # tokenize the text
-    tokenizer = TreebankWordTokenizer()
-    # tokens that have list of sentences and each sentence is a list of words
-    sentences = [tokenizer.tokenize(sentence) for sentence in text]
-    filtered_sentences = []
-    for sentence in sentences:
-        filtered_tokens = [token for token in sentence if token not in stopwords.words('arabic')]
-        if filtered_tokens != []: filtered_sentences.append(filtered_tokens)
-    return filtered_sentences
