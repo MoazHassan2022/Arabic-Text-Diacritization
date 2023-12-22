@@ -25,8 +25,8 @@ def create_char_embeddings(limit = 1000, dataset_path='../../dataset', embedding
     # Tokenize the text into sequences at the character level
     vocab = set(''.join(training_data + validation_data))
 
-    char_to_index = {char: idx for idx, char in enumerate(vocab)}
-    index_to_char = {idx: char for idx, char in enumerate(vocab)}
+    char_to_index = {char: idx + 1 for idx, char in enumerate(vocab)}
+    index_to_char = {idx + 1: char for idx, char in enumerate(vocab)}
     
     # Create the embedding layer
     embedding = nn.Embedding(len(vocab), embedding_dim)
