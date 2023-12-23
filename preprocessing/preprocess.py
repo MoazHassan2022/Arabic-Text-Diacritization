@@ -16,13 +16,13 @@ def clean(lines):
         # remove some unwanted characters
         reg = r'[/!\-؛،؟:\.]'
         lines[i] = replace_pattern(lines[i], re.compile(reg))
+        # remove unwanted characters
+        reg = r'[,»–\';«*\u200f"\\~`]'
+        lines[i] = replace_pattern(lines[i], re.compile(reg))
         # remove extra spaces
         reg = r'\s+'
-        lines[i] = replace_pattern(lines[i], re.compile(reg), ' ')
-        # remove unwanted characters
-        reg = r'[,»\–\';«\*\u200f\"`]'
         
-        lines[i] = replace_pattern(lines[i], re.compile(reg), '')
+        lines[i] = replace_pattern(lines[i], re.compile(reg), ' ')
     return lines
 
 def remove_diactrics(lines):
