@@ -11,16 +11,18 @@ def clean(lines):
         reg = r'\(\s*(\d+)\s*\)|\(\s*(\d+)\s*\/\s*(\d+)\s*\)|\d+'
         lines[i] = replace_pattern(lines[i], re.compile(reg))
         # replace all different types of brackets with a single type
-        reg_brackets = r'[\[\{\(\]\}\)]'
-        lines[i] = re.compile(reg_brackets).sub('', lines[i])
+        #reg_brackets = r'[\[\{\(\]\}\)]'
+        #lines[i] = re.compile(reg_brackets).sub('', lines[i])
         # remove some unwanted characters
-        reg = r'[/!\-؛،؟:\.]'
-        lines[i] = replace_pattern(lines[i], re.compile(reg))
+        #reg = r'[/!\-؛،؟:\.]'
+        #lines[i] = replace_pattern(lines[i], re.compile(reg))
         # remove unwanted characters
-        reg = r'[,»–\';«*\u200f"\\~`]'
+        #reg = r'[,»–\';«*\u200f"\\~`]'
+        reg = r'\u200f'
         lines[i] = replace_pattern(lines[i], re.compile(reg))
         # remove extra spaces
         reg = r'\s+'
+        
         lines[i] = replace_pattern(lines[i], re.compile(reg), ' ')
     return lines
 
