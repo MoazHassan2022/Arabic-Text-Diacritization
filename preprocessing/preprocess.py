@@ -17,8 +17,7 @@ def clean(lines):
         #reg = r'[/!\-؛،؟:\.]'
         #lines[i] = replace_pattern(lines[i], re.compile(reg))
         # remove unwanted characters
-        #reg = r'[,»–\';«*\u200f"\\~`]'
-        reg = r'\u200f'
+        reg = r'[,»–\';«*\u200f"\\~`]'
         lines[i] = replace_pattern(lines[i], re.compile(reg))
         # remove extra spaces
         reg = r'\s+'
