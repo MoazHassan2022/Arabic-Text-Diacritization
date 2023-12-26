@@ -7,7 +7,7 @@ def replace_pattern(text,pattern,replace = ''):
 
 def clean(lines):
     for i in range(len(lines)):
-        # remove any brackets that have only numbers inside and remove all numbers 
+        # remove any brackets that have only numbers inside and remove all numbers
         reg = r'\(\s*(\d+)\s*\)|\(\s*(\d+)\s*\/\s*(\d+)\s*\)|\d+'
         lines[i] = replace_pattern(lines[i], re.compile(reg))
         # replace all different types of brackets with a single type
@@ -15,14 +15,14 @@ def clean(lines):
         lines[i] = re.compile(reg_brackets).sub('', lines[i])
         # remove some unwanted characters
         #reg = r'[/!\-؛،؟:\.]'
-        reg = r'[/\-؛،؟:]'
+        reg = r'[/\/\\\-؛،؟:]'
         lines[i] = replace_pattern(lines[i], re.compile(reg))
         # remove unwanted characters
         reg = r'[,»–\';«*\u200f"\\~`]'
         lines[i] = replace_pattern(lines[i], re.compile(reg))
         # remove extra spaces
         reg = r'\s+'
-        
+
         lines[i] = replace_pattern(lines[i], re.compile(reg), ' ')
     return lines
 
@@ -39,7 +39,7 @@ def preprocess(lines, data_type, dataset_path = '../dataset'):
     lines = clean(lines)
     if len(lines) == 0:
         return lines
-    # save the cleaned text with diacritics to a file 
+    # save the cleaned text with diacritics to a file
     with open(f'{dataset_path}/cleaned_{data_type}_data_with_diacritics.txt', 'a+',encoding='utf-8') as f:
         f.write('\n'.join(lines))
         f.write('\n')
@@ -67,5 +67,5 @@ def preprocess_data(data_type, limit = None, dataset_path = '../dataset'):
             limit = len(lines)
         lines = lines[:limit]
         sentences = preprocess(lines, data_type, dataset_path)
-        
+
     return sentences
