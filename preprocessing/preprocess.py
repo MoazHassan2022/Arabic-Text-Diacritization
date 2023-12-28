@@ -15,7 +15,7 @@ def clean(lines):
         lines[i] = re.compile(reg_brackets).sub('', lines[i])
         # remove some unwanted characters
         #reg = r'[/!\-؛،؟:\.]'
-        reg = r'[/\/\\\-؛،؟:]'
+        reg = r'[/\/\\\-؛،؟:\.]'
         lines[i] = replace_pattern(lines[i], re.compile(reg))
         # remove unwanted characters
         reg = r'[,»–\';«*\u200f"\\~`]'
