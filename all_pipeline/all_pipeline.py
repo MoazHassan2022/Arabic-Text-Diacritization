@@ -448,11 +448,21 @@ class CharLSTM(nn.Module):
         output = self.output(lstm_out)  # batch_size * seq_length * output_size
         return output
 
-def predict_test():
-    test_dataloader = get_dataloader(data_type='test', max_len=max_len, batch_size=batch_size, dataset_path=dataset_path, char_to_index=char_to_index, labels=labels, with_labels=True)
-
+def load_model(model_path):
+    """
+    Load the model from the given path
+    Args:
+        model_path: path to the model file
+    Returns:
+        model: the loaded model
+    """
+    # load the model
     with open(model_path, "rb") as file:
         model = pickle.load(file)
+    return model
+
+def predict_test(model):
+    test_dataloader = get_dataloader(data_type='test', max_len=max_len, batch_size=batch_size, dataset_path=dataset_path, char_to_index=char_to_index, labels=labels, with_labels=True)
         
     # open csv file to write the predictions to, with the first row as the header, ID, and label
     with open('submission.csv', 'w', encoding='utf-8') as file:
@@ -478,8 +488,91 @@ def predict_test():
         for i in range(len(predicted_labels)):
             file.write(f'\n{i},{predicted_labels[i]}')
             
+def predict_single_sentence(model, original_sentence='', max_len=200, char_to_index={}, indicies_to_labels={}, batch_size=256):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu") #; print(device)
+    # preprocess the original sentence
+    preprocessed_sentence = original_sentence.strip()
+    preprocessed_sentence = clean([preprocessed_sentence])[0]
+    
+    # tokenize the sentence
+    preprocessed_sentence = re.compile(r'[\n\r\t]').sub('', preprocessed_sentence)
+    preprocessed_sentence = re.compile(r'\s+').sub(' ', preprocessed_sentence)
+    preprocessed_sentence = preprocessed_sentence.strip()
+
+    tokenized_sentences = []
+    
+    # split the line into sentences by dot
+    dot_splitted_list = preprocessed_sentence.split('.')
+
+    # remove last string if empty
+    if dot_splitted_list[-1] == '':
+        dot_splitted_list = dot_splitted_list[:-1]
+
+    for dot_splitted in dot_splitted_list:
+        dot_splitted = dot_splitted.strip()
+        # Split the line into sentences of max_len, without cutting words
+        sentences = textwrap.wrap(dot_splitted, max_len)
+
+        for sentence in sentences:
+            tokenized_sentences.append(sentence)
+            
+    sentence_sequences = convert2idx(data=tokenized_sentences, char_to_index=char_to_index, max_len=max_len, device=device)
+    
+    dataset = TensorDataset(sentence_sequences, sentence_sequences)
+
+    dataloader = DataLoader(dataset, batch_size=batch_size)
+
+    predicted_labels = []
+        
+    # make the model predict
+    model.eval()
+    for batch_sequences, batch_labels in dataloader:
+        outputs = model(batch_sequences) # batch_size * seq_length * output_size
+        # Calculate accuracy
+        batch_predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
+        mask = (batch_labels != 15) & (batch_sequences != 2) & (batch_sequences != 8) & (batch_sequences != 16) & (batch_sequences != 26) & (batch_sequences != 40)
+        batch_predicted_labels = batch_predicted_labels[mask]
+        
+        # extend these predictions to the predicted_labels list
+        predicted_labels.extend(batch_predicted_labels.tolist())
+        
+    predicted_sentence = ""
+    predicted_char_index = 0
+    for char in original_sentence:
+        predicted_sentence += char
+        # if the char is an unknown char, ., space, ?, ... or :, then keep it as it is
+        if char not in char_to_index:
+            continue
+        elif char_to_index[char] == 2 or char_to_index[char] == 8 or char_to_index[char] == 16 or char_to_index[char] == 26 or char_to_index[char] == 40:
+            continue
+        # get it predicted diacritic (char or tuple of chars)
+        predicted_class = indicies_to_labels[predicted_labels[predicted_char_index]]
+        if type(predicted_class) is tuple:
+            predicted_sentence += chr(predicted_class[0]) + chr(predicted_class[1])
+            predicted_char_index += 1
+        elif predicted_class == 0:
+            # if the predicted diacritic is 0 (no diacritic), then keep the char as it is
+            predicted_char_index += 1
+        else:
+            # else, add the predicted diacritic to the char
+            predicted_sentence += chr(predicted_class)
+            predicted_char_index += 1
+                
+    return predicted_sentence
+            
 
 # main
 if __name__ == "__main__":
-    predict_test()
+    # load the model
+    model = load_model(model_path)
     
+    # predict whole test data, and output labels to submission.csv
+    predict_test(model)
+    
+    # predict a single sentence
+    test_sentence = "ليس للوكيل بالقبض أن يبرأ المدين أو يهب الدين له أو يأخذ رهنا من المدين في مقابل الدين أو يقبل إحالته على شخص آخر لكن له أن يأخذ كفيلا لكن ليس له أن يأخذ كفيلا بشرط براءة الأصيل انظر المادة ( 648 ) ( الأنقروي ، الطحطاوي وصرة الفتاوى ، البحر ) ."
+    print(len(test_sentence))
+    print(test_sentence)
+    predicted_sentence = predict_single_sentence(model=model, original_sentence=test_sentence, max_len=max_len, char_to_index=char_to_index, indicies_to_labels=indicies_to_labels, batch_size=batch_size)
+    print(len(remove_diactrics([predicted_sentence])[0]))
+    print(predicted_sentence)
