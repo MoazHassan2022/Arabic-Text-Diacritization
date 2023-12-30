@@ -178,7 +178,7 @@ def preprocess(lines, data_type, dataset_path = '', with_labels = False):
         f.write('\n')
     return lines
 
-def preprocess_data(data_type, limit = None, dataset_path = '.', with_labels = False):
+def preprocess_data(data_type, limit = None, dataset_path = '.', with_labels = True):
     """
     This function reads the data and cleans it and saves it to files
     Args:
@@ -218,7 +218,7 @@ def count_spaces(input_string):
     space_count = len(re.findall(r'\s', input_string))
     return space_count
 
-def tokenize_data(data_type='test', dataset_path='.', max_len=200, with_labels=False):
+def tokenize_data(data_type='test', dataset_path='.', max_len=200, with_labels=True):
     """
     Tokenize the data into sentences of max_len, without cutting words
     Args:
@@ -377,7 +377,7 @@ def label_data(data_with_diacritics=[], labels={}, max_len=200, device='cpu'):
     
     return data_labels
 
-def get_dataloader(data_type='train', max_len=200, batch_size=256, dataset_path='', char_to_index={}, labels={}, with_labels=False):
+def get_dataloader(data_type='train', max_len=200, batch_size=256, dataset_path='', char_to_index={}, labels={}, with_labels=True):
     """
     Get the data loader for the given data type
     Args:
@@ -449,10 +449,12 @@ class CharLSTM(nn.Module):
         return output
 
 def predict_test():
-    test_dataloader = get_dataloader(data_type='test', max_len=max_len, batch_size=batch_size, dataset_path=dataset_path, char_to_index=char_to_index, labels=labels, with_labels=False)
+    test_dataloader = get_dataloader(data_type='test', max_len=max_len, batch_size=batch_size, dataset_path=dataset_path, char_to_index=char_to_index, labels=labels, with_labels=True)
 
     with open(model_path, "rb") as file:
         model = pickle.load(file)
+        
+    # open csv file to write the predictions to, with the first row as the header, ID, and label
 
     # make the model predict
     model.eval()

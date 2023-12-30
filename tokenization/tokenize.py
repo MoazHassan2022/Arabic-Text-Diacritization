@@ -20,7 +20,7 @@ def count_spaces(input_string):
     space_count = len(re.findall(r'\s', input_string))
     return space_count
 
-def tokenize_data(data_type='test', dataset_path='../dataset', max_len=200, with_labels=False):
+def tokenize_data(data_type='test', dataset_path='../dataset', max_len=200, with_labels=True):
     """
     Tokenize the data into sentences of max_len, without cutting words
     Args:
@@ -179,7 +179,7 @@ def label_data(data_with_diacritics=[], labels={}, max_len=200, device='cpu'):
     
     return data_labels
 
-def get_dataloader(data_type='train', max_len=200, batch_size=256, dataset_path='../dataset', char_to_index={}, labels={}, with_labels=False):
+def get_dataloader(data_type='train', max_len=200, batch_size=256, dataset_path='../dataset', char_to_index={}, labels={}, with_labels=True):
     """
     Get the data loader for the given data type
     Args:

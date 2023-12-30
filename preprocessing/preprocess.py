@@ -56,7 +56,7 @@ def remove_diactrics(lines):
         lines[i] = replace_pattern(lines[i], re.compile(reg))
     return lines
 
-def preprocess(lines, data_type, dataset_path = '../dataset', with_labels = False):
+def preprocess(lines, data_type, dataset_path = '../dataset', with_labels = True):
     """
     This function cleans the text and saves it to a file
     Args:
@@ -85,7 +85,7 @@ def preprocess(lines, data_type, dataset_path = '../dataset', with_labels = Fals
         f.write('\n')
     return lines
 
-def preprocess_data(data_type, limit = None, dataset_path = '../dataset', with_labels = False):
+def preprocess_data(data_type, limit = None, dataset_path = '../dataset', with_labels = True):
     """
     This function reads the data and cleans it and saves it to files
     Args:
