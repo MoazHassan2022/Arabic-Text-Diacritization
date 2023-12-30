@@ -4,6 +4,7 @@ import re
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import torch.nn as nn
+import warnings
 
 # best_model path
 model_path = 'best_model.pkl'
@@ -88,7 +89,8 @@ indicies_to_labels = {
 max_len = 200
 
 # batch size, number of sentences to be processed at once
-batch_size = 256
+training_batch_size = 16
+validation_batch_size = 256
 
 # change this to the path of the dataset files
 dataset_path = ''
@@ -377,7 +379,7 @@ def label_data(data_with_diacritics=[], labels={}, max_len=200, device='cpu'):
     
     return data_labels
 
-def get_dataloader(data_type='train', max_len=200, batch_size=256, dataset_path='', char_to_index={}, labels={}, with_labels=True):
+def get_dataloader(data_type='train', max_len=200, batch_size=256, dataset_path='', char_to_index={}, labels={}, device='cpu', with_labels=True):
     """
     Get the data loader for the given data type
     Args:
@@ -388,11 +390,10 @@ def get_dataloader(data_type='train', max_len=200, batch_size=256, dataset_path=
         char_to_index: dictionary mapping characters to indices
         labels: dictionary mapping diacritics to indices
         with_labels: whether to get data with labels or not
+        device: 'cpu' or 'cuda'
     Returns:
         dataloader: data loader for the given data type
     """
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu"); print(device)
-
     # call the preprocess function to preprocess the data
     preprocess_data(data_type=data_type, dataset_path=dataset_path, with_labels=with_labels)
 
@@ -403,17 +404,17 @@ def get_dataloader(data_type='train', max_len=200, batch_size=256, dataset_path=
     data_sequences = convert2idx(data=data, char_to_index=char_to_index, max_len=max_len, device=device)
 
     # call the label_data function to label the data, this will return list of lists, each list is labels indexes for a sentence
+    # in case with_labels = False, the labels will be 0 (dummy) for all characters
     if with_labels:
         data_labels = label_data(data_with_diacritics=data_with_diacritics, labels=labels, max_len=max_len, device=device)
-
+    else:
+        data_labels = torch.tensor([[15] * max_len] * len(data_sequences)).to(device)
+        
     print(f'{data_type} data shape: ', len(data))
     print(f'{data_type} data sequences shape: ', data_sequences.shape)
 
     # convert the data to tensors data loader
-    if with_labels:
-        dataset = TensorDataset(data_sequences, data_labels)
-    else:
-        dataset = TensorDataset(data_sequences, data_sequences)
+    dataset = TensorDataset(data_sequences, data_labels)
 
     dataloader = DataLoader(dataset, batch_size=batch_size)
     
@@ -447,6 +448,82 @@ class CharLSTM(nn.Module):
         lstm_out, _ = self.lstm(embedded) # batch_size * seq_length * hidden_size
         output = self.output(lstm_out)  # batch_size * seq_length * output_size
         return output
+    
+def train():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu"); print(device)
+    
+    training_dataloader = get_dataloader(data_type='train', max_len=max_len, batch_size=training_batch_size, dataset_path=dataset_path, char_to_index=char_to_index, labels=labels, device=device, with_labels=True)
+    validation_dataloader = get_dataloader(data_type='val', max_len=max_len, batch_size=validation_batch_size, dataset_path=dataset_path, char_to_index=char_to_index, labels=labels, device=device, with_labels=True)
+    
+    # define the model
+    num_layers = 3
+    vocab_size = len(char_to_index) + 1 # +1 for the 0 padding
+    embedding_size = 200
+    output_size = len(labels)
+    hidden_size = 256
+    lr=0.001
+    num_epochs = 5
+
+    model = CharLSTM(vocab_size, embedding_size, hidden_size, output_size, num_layers).to(device)
+    
+    # define the loss function and the optimizer
+    # ignore the padding index
+    # CrossEntropyLoss simply does the softmax and then the negative log likelihood loss
+    criterion = nn.CrossEntropyLoss(ignore_index=15)
+    
+    # Adam optimizer simply does the gradient descent
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+    for epoch in range(num_epochs):
+        # train the model for one epoch
+        for batch_sequences, batch_labels in training_dataloader:
+            # zero the gradients
+            optimizer.zero_grad()
+            # forward pass
+            outputs = model(batch_sequences) # batch_size * seq_length * output_size
+            # calculate loss
+            # outputs: batch_size, seq_length, output_size
+            # labels: batch_size, seq_length
+            # reshape (flatten) the outputs and labels to be 2D
+            # outputs: batch_size * seq_length, output_size
+            # labels: batch_size * seq_length
+            loss = criterion(outputs.view(-1, outputs.shape[-1]), batch_labels.view(-1))
+            # backward pass
+            loss.backward()
+            # update parameters
+            optimizer.step()
+
+        last_loss = loss.item()
+
+        # validate the model
+        model.eval()
+        correct_predictions = 0
+        total_predictions = 0
+        for validation_batch_sequences, validation_batch_labels in validation_dataloader:
+            # make the model predict
+            outputs = model(validation_batch_sequences) # batch_size * seq_length * output_size
+            # calculate accuracy
+            predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
+            # ignore the padding index, and the chars like ' ', '؟', ...
+            mask = (validation_batch_labels != 15) & (validation_batch_sequences != 2) & (validation_batch_sequences != 8) & (validation_batch_sequences != 16) & (validation_batch_sequences != 26) & (validation_batch_sequences != 40)
+            #mask = (validation_batch_labels != 15) & (validation_batch_sequences != 14)
+            # sum the correct predictions
+            correct_predictions += ((predicted_labels == validation_batch_labels) & mask).sum().item()
+            # sum the total predictions (without the padding index, and the chars like ' ', '؟', ...)
+            total_predictions += mask.sum().item()
+
+        # return the model to train mode
+        model.train()
+        
+        # calculate accuracy of the epoch
+        accuracy = correct_predictions / total_predictions
+
+        print(f'Epoch {epoch + 1}/{num_epochs}, Loss: {last_loss * 1:.7f}, Accuracy: {accuracy * 100:.3f}%')
+        
+    # save the model in pkl file
+    file_path = f"BiLSTM_Loss={last_loss * 1:.7f}_Accuracy={accuracy * 100:.3f}%_embedding_size={embedding_size}hidden_size={hidden_size}lr={lr}num_layers={num_layers}num_epochs={num_epochs}max_len={max_len}batch_size={training_batch_size}.pkl"
+    with open(file_path, 'wb') as file:
+        pickle.dump(model, file)
 
 def load_model(model_path):
     """
@@ -462,7 +539,9 @@ def load_model(model_path):
     return model
 
 def predict_test(model):
-    test_dataloader = get_dataloader(data_type='test', max_len=max_len, batch_size=batch_size, dataset_path=dataset_path, char_to_index=char_to_index, labels=labels, with_labels=True)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu"); print(device)
+    
+    test_dataloader = get_dataloader(data_type='test', max_len=max_len, batch_size=validation_batch_size, dataset_path=dataset_path, char_to_index=char_to_index, labels=labels, device=device, with_labels=False)
         
     # open csv file to write the predictions to, with the first row as the header, ID, and label
     with open('submission.csv', 'w', encoding='utf-8') as file:
@@ -472,11 +551,11 @@ def predict_test(model):
         
         # make the model predict
         model.eval()
-        for test_batch_sequences, test_batch_labels in test_dataloader:
+        for test_batch_sequences, _ in test_dataloader:
             outputs = model(test_batch_sequences) # batch_size * seq_length * output_size
             # Calculate accuracy
             batch_predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
-            mask = (test_batch_labels != 15) & (test_batch_sequences != 2) & (test_batch_sequences != 8) & (test_batch_sequences != 16) & (test_batch_sequences != 26) & (test_batch_sequences != 40)
+            mask = (test_batch_sequences != 0) & (test_batch_sequences != 2) & (test_batch_sequences != 8) & (test_batch_sequences != 16) & (test_batch_sequences != 26) & (test_batch_sequences != 40)
             batch_predicted_labels = batch_predicted_labels[mask]
             
             # extend these predictions to the predicted_labels list
@@ -563,6 +642,11 @@ def predict_single_sentence(model, original_sentence='', max_len=200, char_to_in
 
 # main
 if __name__ == "__main__":
+    # supress warnings
+    warnings.filterwarnings('ignore')
+    
+    # NOTE: Uncomment this line to train the model
+    # train()
     # load the model
     model = load_model(model_path)
     
@@ -573,6 +657,6 @@ if __name__ == "__main__":
     test_sentence = "ليس للوكيل بالقبض أن يبرأ المدين أو يهب الدين له أو يأخذ رهنا من المدين في مقابل الدين أو يقبل إحالته على شخص آخر لكن له أن يأخذ كفيلا لكن ليس له أن يأخذ كفيلا بشرط براءة الأصيل انظر المادة ( 648 ) ( الأنقروي ، الطحطاوي وصرة الفتاوى ، البحر ) ."
     print(len(test_sentence))
     print(test_sentence)
-    predicted_sentence = predict_single_sentence(model=model, original_sentence=test_sentence, max_len=max_len, char_to_index=char_to_index, indicies_to_labels=indicies_to_labels, batch_size=batch_size)
+    predicted_sentence = predict_single_sentence(model=model, original_sentence=test_sentence, max_len=max_len, char_to_index=char_to_index, indicies_to_labels=indicies_to_labels, batch_size=validation_batch_size)
     print(len(remove_diactrics([predicted_sentence])[0]))
     print(predicted_sentence)
