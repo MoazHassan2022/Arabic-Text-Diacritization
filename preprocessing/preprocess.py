@@ -77,8 +77,8 @@ def preprocess(lines, data_type, dataset_path = '../dataset', with_labels = Fals
         with open(f'{dataset_path}/cleaned_{data_type}_data_with_diacritics.txt', 'a+',encoding='utf-8') as f:
             f.write('\n'.join(lines))
             f.write('\n')
-        # remove diacritics
-        lines = remove_diactrics(lines)
+    # remove diacritics
+    lines = remove_diactrics(lines)
     # save the cleaned text without diacritics to a file
     with open(f'{dataset_path}/cleaned_{data_type}_data_without_diacritics.txt', 'a+',encoding='utf-8') as f:
         f.write('\n'.join(lines))

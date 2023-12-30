@@ -61,43 +61,45 @@ def tokenize_data(data_type='test', dataset_path='../dataset', max_len=200, with
                     spaces.append(count_spaces(sentence))
                     
     data_with_diacritics = []
-    spaces_index = 0
-    # tokenize data with diacritics
-    with open(f'{dataset_path}/cleaned_{data_type}_data_with_diacritics.txt', 'r', encoding='utf-8') as file:
-        data_with_diacritics_lines = file.readlines()
-        for i in range(len(data_with_diacritics_lines)):
-            data_with_diacritics_lines[i] = re.compile(r'[\n\r\t]').sub('', data_with_diacritics_lines[i])
-            data_with_diacritics_lines[i] = re.compile(r'\s+').sub(' ', data_with_diacritics_lines[i])
-            data_with_diacritics_lines[i] = data_with_diacritics_lines[i].strip()
+    
+    if with_labels:
+        spaces_index = 0
+        # tokenize data with diacritics
+        with open(f'{dataset_path}/cleaned_{data_type}_data_with_diacritics.txt', 'r', encoding='utf-8') as file:
+            data_with_diacritics_lines = file.readlines()
+            for i in range(len(data_with_diacritics_lines)):
+                data_with_diacritics_lines[i] = re.compile(r'[\n\r\t]').sub('', data_with_diacritics_lines[i])
+                data_with_diacritics_lines[i] = re.compile(r'\s+').sub(' ', data_with_diacritics_lines[i])
+                data_with_diacritics_lines[i] = data_with_diacritics_lines[i].strip()
 
-            # split the line into sentences by dot
-            dot_splitted_list = data_with_diacritics_lines[i].split('.')
+                # split the line into sentences by dot
+                dot_splitted_list = data_with_diacritics_lines[i].split('.')
 
-            # remove last string if empty
-            if dot_splitted_list[-1] == '':
-                dot_splitted_list = dot_splitted_list[:-1]
+                # remove last string if empty
+                if dot_splitted_list[-1] == '':
+                    dot_splitted_list = dot_splitted_list[:-1]
 
-            for dot_splitted in dot_splitted_list:
-                dot_splitted = dot_splitted.strip()
-                remaining = dot_splitted
-                remaining_length = len(remaining)
-                #  cut the line into sentences using previously calculated spaces
-                while(remaining_length > 0):
-                    spaces_to_include = spaces[spaces_index]
-                    spaces_index += 1
-                    words = remaining.split()
-                    if len(words) <= spaces_to_include + 1:
-                        # if the remaining words are less than the spaces to include, add them to the data
-                        data_with_diacritics.append(remaining.strip())
-                        remaining_length = 0
-                        break
-                    else:
-                        # if the remaining words are more than the spaces to include, add the first words to the data
-                        sentence = ' '.join(words[:spaces_to_include + 1])
-                        data_with_diacritics.append(sentence.strip())
-                        # and keep the remaining words for the next iteration
-                        remaining = ' '.join(words[spaces_to_include + 1:]).strip()
-                        remaining_length = len(remaining)
+                for dot_splitted in dot_splitted_list:
+                    dot_splitted = dot_splitted.strip()
+                    remaining = dot_splitted
+                    remaining_length = len(remaining)
+                    #  cut the line into sentences using previously calculated spaces
+                    while(remaining_length > 0):
+                        spaces_to_include = spaces[spaces_index]
+                        spaces_index += 1
+                        words = remaining.split()
+                        if len(words) <= spaces_to_include + 1:
+                            # if the remaining words are less than the spaces to include, add them to the data
+                            data_with_diacritics.append(remaining.strip())
+                            remaining_length = 0
+                            break
+                        else:
+                            # if the remaining words are more than the spaces to include, add the first words to the data
+                            sentence = ' '.join(words[:spaces_to_include + 1])
+                            data_with_diacritics.append(sentence.strip())
+                            # and keep the remaining words for the next iteration
+                            remaining = ' '.join(words[spaces_to_include + 1:]).strip()
+                            remaining_length = len(remaining)
                         
     return data, data_with_diacritics
 
