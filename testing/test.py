@@ -85,16 +85,16 @@ indicies_to_labels = {
     15: 15
 }
 
+# max sentence length
+max_len = 200
+
+# batch size, number of sentences to be processed at once
+batch_size = 256
+
+# change this to the path of the dataset files
+dataset_path = '../dataset'
+
 def calc_accuracy():
-    # max sentence length
-    max_len = 200
-
-    # batch size, number of sentences to be processed at once
-    batch_size = 256
-
-    # change this to the path of the dataset files
-    dataset_path = '../dataset'
-
     test_dataloader = get_dataloader(data_type='test', max_len=max_len, batch_size=batch_size, dataset_path=dataset_path, char_to_index=char_to_index, labels=labels, with_labels=True)
 
     with open(model_path, "rb") as file:
