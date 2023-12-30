@@ -455,15 +455,29 @@ def predict_test():
         model = pickle.load(file)
         
     # open csv file to write the predictions to, with the first row as the header, ID, and label
+    with open('submission.csv', 'w', encoding='utf-8') as file:
+        file.write('ID,label')
 
-    # make the model predict
-    model.eval()
-    for test_batch_sequences, test_batch_labels in test_dataloader:
-        outputs = model(test_batch_sequences) # batch_size * seq_length * output_size
-        # Calculate accuracy
-        predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
-        mask = (test_batch_labels != 15) & (test_batch_sequences != 2) & (test_batch_sequences != 8) & (test_batch_sequences != 16) & (test_batch_sequences != 26) & (test_batch_sequences != 40)
-        predicted_labels = predicted_labels[mask]
+        predicted_labels = []
+        
+        # make the model predict
+        model.eval()
+        for test_batch_sequences, test_batch_labels in test_dataloader:
+            outputs = model(test_batch_sequences) # batch_size * seq_length * output_size
+            # Calculate accuracy
+            batch_predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
+            mask = (test_batch_labels != 15) & (test_batch_sequences != 2) & (test_batch_sequences != 8) & (test_batch_sequences != 16) & (test_batch_sequences != 26) & (test_batch_sequences != 40)
+            batch_predicted_labels = batch_predicted_labels[mask]
+            
+            # extend these predictions to the predicted_labels list
+            predicted_labels.extend(batch_predicted_labels.tolist())
+            
+        print('predicted_labels length: ', len(predicted_labels))
+        
+        # write the predictions to the file
+        for i in range(len(predicted_labels)):
+            file.write(f'\n{i},{predicted_labels[i]}')
+            
 
 # main
 if __name__ == "__main__":
