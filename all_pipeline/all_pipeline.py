@@ -86,7 +86,7 @@ indicies_to_labels = {
 }
 
 # max sentence length
-max_len = 200
+max_len = 600
 
 # batch size, number of sentences to be processed at once
 training_batch_size = 16
