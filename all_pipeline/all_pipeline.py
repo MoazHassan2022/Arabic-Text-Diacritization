@@ -10,8 +10,8 @@ import warnings
 model_path = 'best_model.pkl'
 
 # these are the indices of the characters in the vocabulary
-char_to_index = {'د': 1, '؟': 2, 'آ': 3, 'إ': 4, 'ؤ': 5, 'ط': 6, 'م': 7, '،': 8, 'ة': 9, 'ت': 10, 'ر': 11, 'ئ': 12, 'ا': 13, 'ض': 14, '!': 15, ' ': 16, 'ك': 17, 'غ': 18, 'س': 19, 'ص': 20, 'أ': 21, 'ل': 22, 'ف': 23, 'ظ': 24, 'ج': 25, '؛': 26, 'ن': 27, 'ع': 28, 'ب': 29, 'ث': 30, 'ه': 31, 'خ': 32, 'ى': 33, 'ء': 34, 'ز': 35, 'ق': 36, 'ي': 37, 'ش': 38, 'ح': 39, ':': 40, 'ذ': 41, 'و': 42}
-index_to_char = {1: 'د', 2: '؟', 3: 'آ', 4: 'إ', 5: 'ؤ', 6: 'ط', 7: 'م', 8: '،', 9: 'ة', 10: 'ت', 11: 'ر', 12: 'ئ', 13: 'ا', 14: 'ض', 15: '!', 16: ' ', 17: 'ك', 18: 'غ', 19: 'س', 20: 'ص', 21: 'أ', 22: 'ل', 23: 'ف', 24: 'ظ', 25: 'ج', 26: '؛', 27: 'ن', 28: 'ع', 29: 'ب', 30: 'ث', 31: 'ه', 32: 'خ', 33: 'ى', 34: 'ء', 35: 'ز', 36: 'ق', 37: 'ي', 38: 'ش', 39: 'ح', 40: ':', 41: 'ذ', 42: 'و'}
+char_to_index = {'د': 1, '؟': 2, 'آ': 3, 'إ': 4, 'ؤ': 5, 'ط': 6, 'م': 7, '،': 8, 'ة': 9, 'ت': 10, 'ر': 11, 'ئ': 12, 'ا': 13, 'ض': 14, '!': 15, ' ': 16, 'ك': 17, 'غ': 18, 'س': 19, 'ص': 20, 'أ': 21, 'ل': 22, 'ف': 23, 'ظ': 24, 'ج': 25, '؛': 26, 'ن': 27, 'ع': 28, 'ب': 29, 'ث': 30, 'ه': 31, 'خ': 32, 'ى': 33, 'ء': 34, 'ز': 35, 'ق': 36, 'ي': 37, 'ش': 38, 'ح': 39, ':': 40, 'ذ': 41, 'و': 42, '.': 43}
+index_to_char = {1: 'د', 2: '؟', 3: 'آ', 4: 'إ', 5: 'ؤ', 6: 'ط', 7: 'م', 8: '،', 9: 'ة', 10: 'ت', 11: 'ر', 12: 'ئ', 13: 'ا', 14: 'ض', 15: '!', 16: ' ', 17: 'ك', 18: 'غ', 19: 'س', 20: 'ص', 21: 'أ', 22: 'ل', 23: 'ف', 24: 'ظ', 25: 'ج', 26: '؛', 27: 'ن', 28: 'ع', 29: 'ب', 30: 'ث', 31: 'ه', 32: 'خ', 33: 'ى', 34: 'ء', 35: 'ز', 36: 'ق', 37: 'ي', 38: 'ش', 39: 'ح', 40: ':', 41: 'ذ', 42: 'و', 43: '.'}
 
 # define the diacritics unicode and their corresponding labels classes indices
 # note that index 14 is reserved for no diacritic
@@ -244,21 +244,12 @@ def tokenize_data(data_type='test', dataset_path='.', max_len=200, with_labels=T
             data_lines[i] = re.compile(r'\s+').sub(' ', data_lines[i])
             data_lines[i] = data_lines[i].strip()
 
-            # split the line into sentences by dot
-            dot_splitted_list = data_lines[i].split('.')
+            # Split the line into sentences of max_len, without cutting words
+            sentences = textwrap.wrap(data_lines[i], max_len)
 
-            # remove last string if empty
-            if dot_splitted_list[-1] == '':
-                dot_splitted_list = dot_splitted_list[:-1]
-
-            for dot_splitted in dot_splitted_list:
-                dot_splitted = dot_splitted.strip()
-                # Split the line into sentences of max_len, without cutting words
-                sentences = textwrap.wrap(dot_splitted, max_len)
-
-                for sentence in sentences:
-                    data.append(sentence)
-                    spaces.append(count_spaces(sentence))
+            for sentence in sentences:
+                data.append(sentence)
+                spaces.append(count_spaces(sentence))
                     
     data_with_diacritics = []
     
@@ -272,34 +263,21 @@ def tokenize_data(data_type='test', dataset_path='.', max_len=200, with_labels=T
                 data_with_diacritics_lines[i] = re.compile(r'\s+').sub(' ', data_with_diacritics_lines[i])
                 data_with_diacritics_lines[i] = data_with_diacritics_lines[i].strip()
 
-                # split the line into sentences by dot
-                dot_splitted_list = data_with_diacritics_lines[i].split('.')
-
-                # remove last string if empty
-                if dot_splitted_list[-1] == '':
-                    dot_splitted_list = dot_splitted_list[:-1]
-
-                for dot_splitted in dot_splitted_list:
-                    dot_splitted = dot_splitted.strip()
-                    remaining = dot_splitted
-                    remaining_length = len(remaining)
-                    #  cut the line into sentences using previously calculated spaces
-                    while(remaining_length > 0):
-                        spaces_to_include = spaces[spaces_index]
-                        spaces_index += 1
-                        words = remaining.split()
-                        if len(words) <= spaces_to_include + 1:
-                            # if the remaining words are less than the spaces to include, add them to the data
-                            data_with_diacritics.append(remaining.strip())
-                            remaining_length = 0
-                            break
-                        else:
-                            # if the remaining words are more than the spaces to include, add the first words to the data
-                            sentence = ' '.join(words[:spaces_to_include + 1])
-                            data_with_diacritics.append(sentence.strip())
-                            # and keep the remaining words for the next iteration
-                            remaining = ' '.join(words[spaces_to_include + 1:]).strip()
-                            remaining_length = len(remaining)
+                remaining = data_with_diacritics_lines[i]
+                remaining_length = len(remaining)
+                while(remaining_length > 0):
+                    spaces_to_include = spaces[spaces_index]
+                    spaces_index += 1
+                    words = remaining.split()
+                    if len(words) <= spaces_to_include + 1:
+                        data_with_diacritics.append(remaining.strip())
+                        remaining_length = 0
+                        break
+                    else:
+                        sentence = ' '.join(words[:spaces_to_include + 1])
+                        data_with_diacritics.append(sentence.strip())
+                        remaining = ' '.join(words[spaces_to_include + 1:]).strip()
+                        remaining_length = len(remaining)
                         
     return data, data_with_diacritics
 
@@ -343,6 +321,12 @@ def label_data(data_with_diacritics=[], labels={}, max_len=200, device='cpu'):
         index = 0
         while index < sentence_size:
             if ord(data_with_diacritics[sentence_index][index]) not in labels:
+                char_sequence = char_to_index[data_with_diacritics[sentence_index][index]]
+                if char_sequence == 2 or char_sequence == 8 or char_sequence == 16 or char_sequence == 26 or char_sequence == 40 or char_sequence == 43:
+                    # unwanted char
+                    sentence_labels.append(14)
+                    index += 1
+                    continue
                 # char is not a diacritic
                 if (index + 1) < sentence_size and ord(data_with_diacritics[sentence_index][index + 1]) in labels:
                     # char has a diacritic
@@ -433,7 +417,7 @@ class CharLSTM(nn.Module):
         # batch_first: it means that the input tensor has its first dimension representing the batch size
         self.lstm = nn.LSTM(input_size=embedding_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True, bidirectional=True)
 
-        # output layer
+        # output layer, final_output = W * concatenated_hidden_states + bias
         self.output = nn.Linear(hidden_size * 2, output_size)
 
     def forward(self, x):
@@ -458,7 +442,7 @@ def train():
     # define the model
     num_layers = 3
     vocab_size = len(char_to_index) + 1 # +1 for the 0 padding
-    embedding_size = 200
+    embedding_size = 300
     output_size = len(labels)
     hidden_size = 256
     lr=0.001
@@ -505,7 +489,7 @@ def train():
             # calculate accuracy
             predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
             # ignore the padding index, and the chars like ' ', '؟', ...
-            mask = (validation_batch_labels != 15) & (validation_batch_sequences != 2) & (validation_batch_sequences != 8) & (validation_batch_sequences != 16) & (validation_batch_sequences != 26) & (validation_batch_sequences != 40)
+            mask = (validation_batch_labels != 15) & (validation_batch_sequences != 2) & (validation_batch_sequences != 8) & (validation_batch_sequences != 16) & (validation_batch_sequences != 26) & (validation_batch_sequences != 40) & (validation_batch_sequences != 43)
             #mask = (validation_batch_labels != 15) & (validation_batch_sequences != 14)
             # sum the correct predictions
             correct_predictions += ((predicted_labels == validation_batch_labels) & mask).sum().item()
@@ -555,7 +539,7 @@ def predict_test(model):
             outputs = model(test_batch_sequences) # batch_size * seq_length * output_size
             # Calculate accuracy
             batch_predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
-            mask = (test_batch_sequences != 0) & (test_batch_sequences != 2) & (test_batch_sequences != 8) & (test_batch_sequences != 16) & (test_batch_sequences != 26) & (test_batch_sequences != 40)
+            mask = (test_batch_sequences != 0) & (test_batch_sequences != 2) & (test_batch_sequences != 8) & (test_batch_sequences != 16) & (test_batch_sequences != 26) & (test_batch_sequences != 40) & (test_batch_sequences != 43)
             batch_predicted_labels = batch_predicted_labels[mask]
             
             # extend these predictions to the predicted_labels list
@@ -609,7 +593,7 @@ def predict_single_sentence(model, original_sentence='', max_len=200, char_to_in
         outputs = model(batch_sequences) # batch_size * seq_length * output_size
         # Calculate accuracy
         batch_predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
-        mask = (batch_labels != 15) & (batch_sequences != 2) & (batch_sequences != 8) & (batch_sequences != 16) & (batch_sequences != 26) & (batch_sequences != 40)
+        mask = (batch_labels != 15) & (batch_sequences != 2) & (batch_sequences != 8) & (batch_sequences != 16) & (batch_sequences != 26) & (batch_sequences != 40) & (batch_sequences != 43)
         batch_predicted_labels = batch_predicted_labels[mask]
         
         # extend these predictions to the predicted_labels list
@@ -622,7 +606,7 @@ def predict_single_sentence(model, original_sentence='', max_len=200, char_to_in
         # if the char is an unknown char, ., space, ?, ... or :, then keep it as it is
         if char not in char_to_index:
             continue
-        elif char_to_index[char] == 2 or char_to_index[char] == 8 or char_to_index[char] == 16 or char_to_index[char] == 26 or char_to_index[char] == 40:
+        elif char_to_index[char] == 2 or char_to_index[char] == 8 or char_to_index[char] == 16 or char_to_index[char] == 26 or char_to_index[char] == 40 or char_to_index[char] == 43:
             continue
         # get it predicted diacritic (char or tuple of chars)
         predicted_class = indicies_to_labels[predicted_labels[predicted_char_index]]
