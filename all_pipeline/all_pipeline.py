@@ -655,9 +655,9 @@ if __name__ == "__main__":
     warnings.filterwarnings('ignore')
     
     # NOTE: Uncomment this line to train the model
-    train()
+    # train()
     # load the model
-    """model = load_model(model_path)
+    model = load_model(model_path)
     
     # predict whole test data, and output labels to submission.csv
     predict_test(model)
@@ -668,4 +668,4 @@ if __name__ == "__main__":
     print(test_sentence)
     predicted_sentence = predict_single_sentence(model=model, original_sentence=test_sentence, max_len=max_len, char_to_index=char_to_index, indicies_to_labels=indicies_to_labels, batch_size=validation_batch_size)
     print(len(remove_diactrics([predicted_sentence])[0]))
-    print(predicted_sentence)"""
+    print(predicted_sentence)
