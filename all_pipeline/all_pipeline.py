@@ -4,6 +4,8 @@ import re
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import torch.nn as nn
+from torch.nn import BatchNorm1d
+from torch.optim.lr_scheduler import StepLR
 import warnings
 
 # best_model path
@@ -89,7 +91,7 @@ indicies_to_labels = {
 max_len = 600
 
 # batch size, number of sentences to be processed at once
-training_batch_size = 16
+training_batch_size = 32
 validation_batch_size = 256
 
 # change this to the path of the dataset files
@@ -408,14 +410,19 @@ class CharLSTM(nn.Module):
     """
     This class implements the character level BiLSTM model
     """
-    def __init__(self, vocab_size, embedding_size, hidden_size, output_size, num_layers=1):
+    def __init__(self, vocab_size, embedding_size, hidden_size, output_size, dropout_rate, num_layers=1):
         super(CharLSTM, self).__init__()
         # chars embedding layer
         self.embedding = nn.Embedding(vocab_size, embedding_size)
 
         # LSTM layers
         # batch_first: it means that the input tensor has its first dimension representing the batch size
-        self.lstm = nn.LSTM(input_size=embedding_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True, bidirectional=True)
+        self.lstm = nn.LSTM(input_size=embedding_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True, bidirectional=True, dropout=dropout_rate)
+        
+        # batch normalization layer, to normalize the hidden states, it simply does the following:
+        # x = (x - mean) / std
+        # where mean and std are calculated for each hidden state
+        self.batchnorm = BatchNorm1d(max_len)
 
         # output layer, final_output = W * concatenated_hidden_states + bias
         self.output = nn.Linear(hidden_size * 2, output_size)
@@ -430,6 +437,7 @@ class CharLSTM(nn.Module):
         """
         embedded = self.embedding(x) # batch_size * seq_length * embedding_size
         lstm_out, _ = self.lstm(embedded) # batch_size * seq_length * hidden_size
+        lstm_out = self.batchnorm(lstm_out) # batch_size * seq_length * hidden_size
         output = self.output(lstm_out)  # batch_size * seq_length * output_size
         return output
     
@@ -447,8 +455,11 @@ def train():
     hidden_size = 256
     lr=0.001
     num_epochs = 5
+    dropout_rate = 0.1
+    lr_step_size = 5
+    lr_gamma = 0.1
 
-    model = CharLSTM(vocab_size, embedding_size, hidden_size, output_size, num_layers).to(device)
+    model = CharLSTM(vocab_size, embedding_size, hidden_size, output_size, dropout_rate, num_layers).to(device)
     
     # define the loss function and the optimizer
     # ignore the padding index
@@ -456,7 +467,15 @@ def train():
     criterion = nn.CrossEntropyLoss(ignore_index=15)
     
     # Adam optimizer simply does the gradient descent
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    # betas: these are the coefficients used for computing running averages of the gradient and its square in the Adam optimizer. 
+    # the first value (0.9) is the exponential decay rate for the running average of gradients, 
+    # and the second value (0.999) is the exponential decay rate for the running average of squared gradients.
+    # eps: is a small constant added to the denominator to prevent division by zero in the computation of the adaptive learning rates.
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08)
+    
+    # scheduler to decrease the learning rate every lr_step_size epochs
+    # gamma: multiplicative factor of learning rate decay
+    scheduler = StepLR(optimizer, step_size=lr_step_size, gamma=lr_gamma)
 
     for epoch in range(num_epochs):
         # train the model for one epoch
@@ -471,7 +490,10 @@ def train():
             # reshape (flatten) the outputs and labels to be 2D
             # outputs: batch_size * seq_length, output_size
             # labels: batch_size * seq_length
-            loss = criterion(outputs.view(-1, outputs.shape[-1]), batch_labels.view(-1))
+            flat_outputs = outputs.view(-1, outputs.shape[-1])
+            flat_labels = batch_labels.view(-1)
+            mask = (flat_labels != 15)
+            loss = criterion(flat_outputs[mask], flat_labels[mask])
             # backward pass
             loss.backward()
             # update parameters
@@ -498,6 +520,9 @@ def train():
 
         # return the model to train mode
         model.train()
+        
+        # decrease the learning rate
+        scheduler.step()
         
         # calculate accuracy of the epoch
         accuracy = correct_predictions / total_predictions
@@ -630,9 +655,9 @@ if __name__ == "__main__":
     warnings.filterwarnings('ignore')
     
     # NOTE: Uncomment this line to train the model
-    # train()
+    train()
     # load the model
-    model = load_model(model_path)
+    """model = load_model(model_path)
     
     # predict whole test data, and output labels to submission.csv
     predict_test(model)
@@ -643,4 +668,4 @@ if __name__ == "__main__":
     print(test_sentence)
     predicted_sentence = predict_single_sentence(model=model, original_sentence=test_sentence, max_len=max_len, char_to_index=char_to_index, indicies_to_labels=indicies_to_labels, batch_size=validation_batch_size)
     print(len(remove_diactrics([predicted_sentence])[0]))
-    print(predicted_sentence)
+    print(predicted_sentence)"""
