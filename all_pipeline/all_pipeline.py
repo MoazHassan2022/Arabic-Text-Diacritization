@@ -529,27 +529,43 @@ def predict_test(model):
         
     # open csv file to write the predictions to, with the first row as the header, ID, and label
     with open('submission.csv', 'w', encoding='utf-8') as file:
-        file.write('ID,label')
+        with open('letters.csv', 'w', encoding='utf-8') as letters_file:
+            file.write('ID,label')
 
-        predicted_labels = []
-        
-        # make the model predict
-        model.eval()
-        for test_batch_sequences, _ in test_dataloader:
-            outputs = model(test_batch_sequences) # batch_size * seq_length * output_size
-            # Calculate accuracy
-            batch_predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
-            mask = (test_batch_sequences != 0) & (test_batch_sequences != 2) & (test_batch_sequences != 8) & (test_batch_sequences != 16) & (test_batch_sequences != 26) & (test_batch_sequences != 40) & (test_batch_sequences != 43)
-            batch_predicted_labels = batch_predicted_labels[mask]
+            predicted_labels = []
             
-            # extend these predictions to the predicted_labels list
-            predicted_labels.extend(batch_predicted_labels.tolist())
+            predicted_chars = []
             
-        print('predicted_labels length: ', len(predicted_labels))
-        
-        # write the predictions to the file
-        for i in range(len(predicted_labels)):
-            file.write(f'\n{i},{predicted_labels[i]}')
+            # make the model predict
+            model.eval()
+            for test_batch_sequences, _ in test_dataloader:
+                outputs = model(test_batch_sequences) # batch_size * seq_length * output_size
+                # Calculate accuracy
+                batch_predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
+                mask = (test_batch_sequences != 0) & (test_batch_sequences != 2) & (test_batch_sequences != 8) & (test_batch_sequences != 16) & (test_batch_sequences != 26) & (test_batch_sequences != 40) & (test_batch_sequences != 43)
+                batch_predicted_labels = batch_predicted_labels[mask]
+                
+                # extend these predictions to the predicted_labels list
+                predicted_labels.extend(batch_predicted_labels.tolist())
+                
+                # append to predicted_chars, index_to_char[predicted_char_index]
+                for predicted_batch in test_batch_sequences.tolist():
+                    for predicted_char_index in predicted_batch:
+                        if predicted_char_index == 0 or predicted_char_index == 2 or predicted_char_index == 8 or predicted_char_index == 16 or predicted_char_index == 26 or predicted_char_index == 40 or predicted_char_index == 43:
+                            continue
+                        predicted_chars.append(index_to_char[predicted_char_index])
+                
+            print('predicted_labels length: ', len(predicted_labels))
+            
+            # write the predictions to the file
+            for i in range(len(predicted_labels)):
+                file.write(f'\n{i},{predicted_labels[i]}')
+                
+            # write the letters to the file
+            for i in range(len(predicted_chars)):
+                file.write(f'{predicted_chars[i]}')
+                if i < len(predicted_chars) - 1:
+                    file.write('\n')
             
 def predict_single_sentence(model, original_sentence='', max_len=200, char_to_index={}, indicies_to_labels={}, batch_size=256):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu") #; print(device)
