@@ -322,7 +322,7 @@ def label_data(data_with_diacritics=[], labels={}, max_len=200, device='cpu'):
         while index < sentence_size:
             if ord(data_with_diacritics[sentence_index][index]) not in labels:
                 char_sequence = char_to_index[data_with_diacritics[sentence_index][index]]
-                if char_sequence == 2 or char_sequence == 8 or char_sequence == 16 or char_sequence == 26 or char_sequence == 40 or char_sequence == 43:
+                if char_sequence == 2 or char_sequence == 8 or char_sequence == 15 or char_sequence == 16 or char_sequence == 26 or char_sequence == 40 or char_sequence == 43:
                     # unwanted char
                     sentence_labels.append(14)
                     index += 1
@@ -489,7 +489,7 @@ def train():
             # calculate accuracy
             predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
             # ignore the padding index, and the chars like ' ', '؟', ...
-            mask = (validation_batch_labels != 15) & (validation_batch_sequences != 2) & (validation_batch_sequences != 8) & (validation_batch_sequences != 16) & (validation_batch_sequences != 26) & (validation_batch_sequences != 40) & (validation_batch_sequences != 43)
+            mask = (validation_batch_labels != 15) & (validation_batch_sequences != 2) & (validation_batch_sequences != 8) & (validation_batch_sequences != 15) & (validation_batch_sequences != 16) & (validation_batch_sequences != 26) & (validation_batch_sequences != 40) & (validation_batch_sequences != 43)
             #mask = (validation_batch_labels != 15) & (validation_batch_sequences != 14)
             # sum the correct predictions
             correct_predictions += ((predicted_labels == validation_batch_labels) & mask).sum().item()
@@ -542,7 +542,7 @@ def predict_test(model):
                 outputs = model(test_batch_sequences) # batch_size * seq_length * output_size
                 # Calculate accuracy
                 batch_predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
-                mask = (test_batch_sequences != 0) & (test_batch_sequences != 2) & (test_batch_sequences != 8) & (test_batch_sequences != 16) & (test_batch_sequences != 26) & (test_batch_sequences != 40) & (test_batch_sequences != 43)
+                mask = (test_batch_sequences != 0) & (test_batch_sequences != 2) & (test_batch_sequences != 8) & (test_batch_sequences != 15) & (test_batch_sequences != 16) & (test_batch_sequences != 26) & (test_batch_sequences != 40) & (test_batch_sequences != 43)
                 batch_predicted_labels = batch_predicted_labels[mask]
                 
                 # extend these predictions to the predicted_labels list
@@ -551,7 +551,7 @@ def predict_test(model):
                 # append to predicted_chars, index_to_char[predicted_char_index]
                 for predicted_batch in test_batch_sequences.tolist():
                     for predicted_char_index in predicted_batch:
-                        if predicted_char_index == 0 or predicted_char_index == 2 or predicted_char_index == 8 or predicted_char_index == 16 or predicted_char_index == 26 or predicted_char_index == 40 or predicted_char_index == 43:
+                        if predicted_char_index == 0 or predicted_char_index == 2 or predicted_char_index == 8 or predicted_char_index == 15 or predicted_char_index == 16 or predicted_char_index == 26 or predicted_char_index == 40 or predicted_char_index == 43:
                             continue
                         predicted_chars.append(index_to_char[predicted_char_index])
                 
@@ -609,7 +609,7 @@ def predict_single_sentence(model, original_sentence='', max_len=200, char_to_in
         outputs = model(batch_sequences) # batch_size * seq_length * output_size
         # Calculate accuracy
         batch_predicted_labels = outputs.argmax(dim=2)  # Get the index with the maximum probability
-        mask = (batch_labels != 15) & (batch_sequences != 2) & (batch_sequences != 8) & (batch_sequences != 16) & (batch_sequences != 26) & (batch_sequences != 40) & (batch_sequences != 43)
+        mask = (batch_labels != 15) & (batch_sequences != 2) & (batch_sequences != 8) & (batch_sequences != 15) & (batch_sequences != 16) & (batch_sequences != 26) & (batch_sequences != 40) & (batch_sequences != 43)
         batch_predicted_labels = batch_predicted_labels[mask]
         
         # extend these predictions to the predicted_labels list
@@ -622,7 +622,7 @@ def predict_single_sentence(model, original_sentence='', max_len=200, char_to_in
         # if the char is an unknown char, ., space, ?, ... or :, then keep it as it is
         if char not in char_to_index:
             continue
-        elif char_to_index[char] == 2 or char_to_index[char] == 8 or char_to_index[char] == 16 or char_to_index[char] == 26 or char_to_index[char] == 40 or char_to_index[char] == 43:
+        elif char_to_index[char] == 2 or char_to_index[char] == 8 or char_to_index[char] == 15 or char_to_index[char] == 16 or char_to_index[char] == 26 or char_to_index[char] == 40 or char_to_index[char] == 43:
             continue
         # get it predicted diacritic (char or tuple of chars)
         predicted_class = indicies_to_labels[predicted_labels[predicted_char_index]]
