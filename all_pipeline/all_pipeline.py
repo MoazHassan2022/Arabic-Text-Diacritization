@@ -563,9 +563,9 @@ def predict_test(model):
                 
             # write the letters to the file
             for i in range(len(predicted_chars)):
-                file.write(f'{predicted_chars[i]}')
+                letters_file.write(f'{predicted_chars[i]}')
                 if i < len(predicted_chars) - 1:
-                    file.write('\n')
+                    letters_file.write('\n')
             
 def predict_single_sentence(model, original_sentence='', max_len=200, char_to_index={}, indicies_to_labels={}, batch_size=256):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu") #; print(device)
