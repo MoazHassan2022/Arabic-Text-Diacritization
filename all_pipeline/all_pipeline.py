@@ -655,7 +655,7 @@ if __name__ == "__main__":
     warnings.filterwarnings('ignore')
     
     # NOTE: Uncomment this line to train the model
-    # train()
+    train()
     # load the model
     model = load_model(model_path)
     
