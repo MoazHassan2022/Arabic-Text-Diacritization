@@ -448,14 +448,14 @@ def train():
     validation_dataloader = get_dataloader(data_type='val', max_len=max_len, batch_size=validation_batch_size, dataset_path=dataset_path, char_to_index=char_to_index, labels=labels, device=device, with_labels=True)
     
     # define the model
-    num_layers = 3
+    num_layers = 5
     vocab_size = len(char_to_index) + 1 # +1 for the 0 padding
     embedding_size = 300
     output_size = len(labels)
     hidden_size = 256
     lr=0.001
-    num_epochs = 5
-    dropout_rate = 0.1
+    num_epochs = 19
+    dropout_rate = 0.2
     lr_step_size = 5
     lr_gamma = 0.1
 
