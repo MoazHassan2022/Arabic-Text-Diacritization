@@ -11,7 +11,7 @@
 
 ---
 
-<p align="left"> This competetion project is focused on the task of Arabic Text Diacritization. It uses state-of-the-art Natural Language Processing (NLP) techniques to add diacritical marks to Arabic text. These marks are crucial for correctly interpreting and pronouncing Arabic words. The project includes a comprehensive pipeline for preprocessing the text, training the diacritization model, and testing its accuracy on test set.
+<p align="left"> This competition project is focused on the task of Arabic Text Diacritization. It uses state-of-the-art Natural Language Processing (NLP) techniques to add diacritical marks to Arabic text. These marks are crucial for correctly interpreting and pronouncing Arabic words. The project includes a comprehensive pipeline for preprocessing the text, training the diacritization model, and testing its accuracy on test set.
 </p>
 
 ## 📝 Table of Contents
@@ -22,7 +22,7 @@
 - [Char Level Embedding](#char-level-embedding)
 - [Training](#training)
 - [Testing and Accuracy](#testing-and-accuracy)
-- [Competetion Results](#competetion-results)
+- [competition Results](#competition-results)
 
 ## 🧐 About <a name = "about"></a>
 
@@ -62,14 +62,14 @@ One could consider it as a classification problem on char-level with 14 classes 
   * Here is a demo to diacritize a single sentence:
     ![alt text](./documentation/single.png)
 
-## Competetion Results <a name = "competetion-results"></a>
-* A competetion was held by our college on Kaggle, with 4 different test sets, with 20 competing teams.
-* Our team (شَرِكَةُ الْمُرْعِبِيِنَ) has achieved the first position at all the 4 competetions!
-* <a href="https://www.kaggle.com/competitions/cufe-cmp-mainstream-nlp-fall-2023/leaderboard">First competetion</a>:
+## competition Results <a name = "competition-results"></a>
+* A competition was held by our college on Kaggle, with 4 different test sets, with 20 competing teams.
+* Our team (شَرِكَةُ الْمُرْعِبِيِنَ) has achieved the first position at all the 4 competitions!
+* <a href="https://www.kaggle.com/competitions/cufe-cmp-mainstream-nlp-fall-2023/leaderboard">First competition</a>:
   ![alt text](./documentation/CompetitionLeaderboard1.png)
-* <a href="https://www.kaggle.com/competitions/nlp-mainstream-1-f23/leaderboard">Second competetion</a>:
+* <a href="https://www.kaggle.com/competitions/nlp-mainstream-1-f23/leaderboard">Second competition</a>:
   ![alt text](./documentation/CompetitionLeaderboard2.png)
-* <a href="https://www.kaggle.com/competitions/nlp-mainstream-2-f23/leaderboard">Third competetion</a>:
+* <a href="https://www.kaggle.com/competitions/nlp-mainstream-2-f23/leaderboard">Third competition</a>:
   ![alt text](./documentation/CompetitionLeaderboard3.png)
-* <a href="https://www.kaggle.com/competitions/nlp-mainstream-3-f23/leaderboard">Fourth competetion</a>:
+* <a href="https://www.kaggle.com/competitions/nlp-mainstream-3-f23/leaderboard">Fourth competition</a>:
   ![alt text](./documentation/CompetitionLeaderboard4.png)
