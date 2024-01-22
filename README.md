@@ -22,7 +22,7 @@
 - [Char Level Embedding](#char-level-embedding)
 - [Training](#training)
 - [Testing and Accuracy](#testing-and-accuracy)
-- [competition Results](#competition-results)
+- [Competition Results](#competition-results)
 
 ## 🧐 About <a name = "about"></a>
 
@@ -62,7 +62,7 @@ One could consider it as a classification problem on char-level with 14 classes 
   * Here is a demo to diacritize a single sentence:
     ![alt text](./documentation/single.png)
 
-## competition Results <a name = "competition-results"></a>
+## Competition Results <a name = "competition-results"></a>
 * A competition was held by our college on Kaggle, with 4 different test sets, with 20 competing teams.
 * Our team (شَرِكَةُ الْمُرْعِبِيِنَ) has achieved the first position at all the 4 competitions!
 * <a href="https://www.kaggle.com/competitions/cufe-cmp-mainstream-nlp-fall-2023/leaderboard">First competition</a>:
